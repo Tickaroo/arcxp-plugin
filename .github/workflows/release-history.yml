@@ -22,7 +22,7 @@ jobs:
 
       - name: Zip erstellen
         run: |
-          zip -r arcxp-plugin-${{ env.TIMESTAMP }}.zip components/chains/article-body/ components/features/TickarooLiveblogPowerUp/ content/sources/tickaroo-liveblog.js environmennt/index.json -x "*.git*"
+          zip -r arcxp-plugin-${{ env.TIMESTAMP }}.zip components/chains/article-body/ components/features/TickarooLiveblogPowerUp/ content/sources/tickaroo-liveblog.js environment/index.json -x "*.git*"
 
       - name: Historisches Release erstellen
         uses: softprops/action-gh-release@v2
