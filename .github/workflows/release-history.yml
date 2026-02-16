@@ -22,14 +22,14 @@ jobs:
 
       - name: Zip erstellen
         run: |
-          zip -r mein-projekt-${{ env.TIMESTAMP }}.zip src/ assets/ config.json -x "*.git*"
+          zip -r arcxp-plugin-${{ env.TIMESTAMP }}.zip components/chains/article-body/ components/features/TickarooLiveblogPowerUp/ content/sources/tickaroo-liveblog.js environmennt/index.json -x "*.git*"
 
       - name: Historisches Release erstellen
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.TIMESTAMP }}
           name: Release ${{ env.TIMESTAMP }}
-          files: mein-projekt-${{ env.TIMESTAMP }}.zip
+          files: arcxp-plugin-${{ env.TIMESTAMP }}.zip
           draft: false
           prerelease: false
         env:
@@ -62,7 +62,7 @@ jobs:
         with:
           tag_name: latest
           name: Latest Build
-          files: mein-projekt-${{ env.TIMESTAMP }}.zip
+          files: arcxp-plugin-${{ env.TIMESTAMP }}.zip
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
