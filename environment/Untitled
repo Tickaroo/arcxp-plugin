@@ -1,0 +1,18 @@
+{
+    "TIK_CLIENT_ID": "<YOUR CLIENT ID>",
+    "TIK_USE_SEO": false,
+    "TIK_THEMES": [
+        {
+            "id": "<YOUR THEME ID 1>",
+            "name": "<YOUR THEME NAME 1>"
+        },
+        {
+            "id": "<YOUR THEME ID 2>",
+            "name": "<YOUR THEME NAME 2>"
+        },
+        {
+            "id": "<YOUR THEME ID ...>",
+            "name": "<YOUR THEME NAME ...>"
+        }
+    ]
+}
