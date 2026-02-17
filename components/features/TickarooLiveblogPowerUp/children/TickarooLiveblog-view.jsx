@@ -53,43 +53,32 @@ const TickarooLiveblogView = () => {
   })
 
   useEffect(() => {
-    const loadScript = (src) => {
-      return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-
-        script.src = src;
-        script.onload = () => resolve(script);
-        script.onerror = () =>
-          reject(new Error(`Script load error for ${src}`));
-        document.body.appendChild(script);
-      });
-    };
-
-    const initLiveblog = async () => {
-      if(!params?.id) return;
-      if(!params?.config?.themeId) return;
-      if(!params?.config?.clientId) return;
-      Array.from(document.scripts).some(s => s.src === new URL('//cdn.tickaroo.com/webng/embedjs/tik4.js', location.origin).href)
-      ? undefined 
-      : await loadScript('//cdn.tickaroo.com/webng/embedjs/tik4.js');
-
-      const container = document.getElementById('tickaroo-liveblog-container');
-      if(container) {
-        if(content?.html) {
-          container.innerHTML = content.html;
-        } else {
-          container.innerHTML = `<tickaroo-liveblog liveblogId="${params.id}" themeId="${params.config.themeId}" useSlideshow="true" clientId="${params.config.clientId}" disableTracking="true"></tickaroo-liveblog>`;
-        }
+    async function load() {
+      if (!params?.id || !params?.config?.themeId || !params?.config?.clientId) {
+        return;
       }
-    };
-
-    initLiveblog().catch(console.error);
-
-    return () => {
-      const scripts = document.querySelectorAll('script[src*="tickaroo.com"]');
-      scripts.forEach(script => script.remove());
+      const alreadyLoaded = Array.from(document.scripts).some(
+        s => s.src.includes('tik4.js')
+      );
+      if (!alreadyLoaded) {
+        const script = document.createElement('script');
+        script.src = '//cdn.tickaroo.com/webng/embedjs/tik4.js';
+        script.async = true;
+        document.body.appendChild(script);
+      }
     }
-  }, [params?.id, content?.html])
+    load().catch(console.error);
+  }, [params?.id]);
+
+  const html =
+  content?.html ??
+  (params?.id && params?.config?.themeId && params?.config?.clientId
+    ? `<tickaroo-liveblog 
+        liveblogId="${params.id}" 
+        themeId="${params.config.themeId}" 
+        clientId="${params.config.clientId}" 
+      </tickaroo-liveblog>`
+    : '');
 
   return <><style>{`#fusion-app {
   height: 100%;
@@ -149,7 +138,7 @@ const TickarooLiveblogView = () => {
   background-color: #B2153F;
   border-color: #a7133b;
 }`}</style>{content?.schema && <script type="application/ld+json">{JSON.stringify(content.schema)}</script>}<div id="container-wrapper">
-        <div id="tickaroo-liveblog-container"></div>
+      <div id="tickaroo-liveblog-container" dangerouslySetInnerHTML={{ __html: html }} />
       <button id="go-to-btn" onClick={() => {window.open(`https://pro.tickaroo.com/tickers/${params?.id}/edit`, "_blank");}}>Open liveblog editor</button>
     </div></>;
 };
