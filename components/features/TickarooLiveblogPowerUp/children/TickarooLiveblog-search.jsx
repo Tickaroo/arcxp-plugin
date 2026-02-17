@@ -34,7 +34,7 @@ const handleSubmit = (liveblogId, themeId) => {
   sendMessage('data', ansCustomEmbed)
 }
 
-const TickarooSearch = () => {
+const TickarooLiveblogSearch = () => {
   const [liveblogId, setLiveblogId] = useState('');
   const [themeId, setThemeId] = useState(TIK_THEMES[0].id);
   const handleInputChange = (e) => {
@@ -138,4 +138,4 @@ const TickarooSearch = () => {
   );
 };
 
-export default TickarooSearch;
+export default TickarooLiveblogSearch;

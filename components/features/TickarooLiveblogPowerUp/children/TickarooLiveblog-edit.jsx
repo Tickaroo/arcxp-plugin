@@ -34,7 +34,7 @@ const handleSubmit = (liveblogId, themeId) => {
   sendMessage('data', ansCustomEmbed)
 }
 
-const TickarooEdit = () => {
+const TickarooLiveblogEdit = () => {
   const [liveblogId, setLiveblogId] = useState('');
   const [themeId, setThemeId] = useState(TIK_THEMES[0].id);
   useEffect(() => {
@@ -157,4 +157,4 @@ const TickarooEdit = () => {
   );
 };
 
-export default TickarooEdit;
+export default TickarooLiveblogEdit;

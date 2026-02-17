@@ -25,7 +25,7 @@ const parseQueryString = function() {
   }, {})
 }
 
-const TickarooView = () => {
+const TickarooLiveblogView = () => {
 
   useEffect(() => {
     sendMessage('ready', {
@@ -154,4 +154,4 @@ const TickarooView = () => {
     </div></>;
 };
 
-export default TickarooView;
+export default TickarooLiveblogView;

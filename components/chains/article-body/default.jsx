@@ -1,4 +1,4 @@
-import TickarooComponent from './_children/TickarooComponent';
+import TickarooLiveblog from './_children/TickarooLiveblog';
 import PropTypes from 'fusion:prop-types';
 
 function parseArticleItem(item, index, arcSite, phrases, id, customFields) {
@@ -21,7 +21,7 @@ function parseArticleItem(item, index, arcSite, phrases, id, customFields) {
         case 'custom_embed':
             switch (item.subtype) {
                 case 'Tickaroo Liveblog':
-                    return <TickarooComponent key={`${type}_${index}_${key}`} embed={item.embed} />;
+                    return <TickarooLiveblog key={`${type}_${index}_${key}`} embed={item.embed} />;
                 default:
                     return null;
             }

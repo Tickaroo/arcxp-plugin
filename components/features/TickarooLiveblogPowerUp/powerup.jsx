@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import get from 'lodash.get';
-import TickarooSearch from './children/Tickaroo-search.jsx';
-import TickarooView from './children/Tickaroo-view.jsx';
-import TickarooEdit from './children/Tickaroo-edit.jsx';
+import TickarooLiveblogSearch from './children/TickarooLiveblog-search.jsx';
+import TickarooLiveblogView from './children/TickarooLiveblog-view.jsx';
+import TickarooLiveblogEdit from './children/TickarooLiveblog-edit.jsx';
 
 //This component is the Block that is added to a page
 //and it controls which frame to display based on the URL
@@ -23,9 +23,9 @@ const PowerUpTemplate = () => {
         width: '100%',
       }}
     >
-      {actionID.includes('#SEARCH') && <TickarooSearch />}
-      {actionID.includes('#VIEW') && <TickarooView />}
-      {actionID.includes('#EDIT') && <TickarooEdit />}
+      {actionID.includes('#SEARCH') && <TickarooLiveblogSearch />}
+      {actionID.includes('#VIEW') && <TickarooLiveblogView />}
+      {actionID.includes('#EDIT') && <TickarooLiveblogEdit />}
     </div>
   );
 };

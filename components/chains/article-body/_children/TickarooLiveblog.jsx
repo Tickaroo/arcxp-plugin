@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useContent } from 'fusion:content'
 import { TIK_USE_SEO } from 'fusion:environment';
 
-const TickarooView = ({ embed }) => {
+const TickarooLiveblogView = ({ embed }) => {
 
   const content = useContent({
     source: TIK_USE_SEO ? 'tickaroo-liveblog' : null,
@@ -61,4 +61,4 @@ const TickarooView = ({ embed }) => {
   </>;
 };
 
-export default TickarooView;
+export default TickarooLiveblogView;
