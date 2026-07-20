@@ -2,6 +2,7 @@ import { useFusionContext } from 'fusion:context';
 import { isServerSide } from 'fusion:environment';
 import { LazyLoad, usePhrases } from '@wpmedia/arc-themes-components';
 import TickarooLiveblog from './_children/TickarooLiveblog';
+import TickarooLiveblogTeaser from './_children/TickarooLiveblogTeaser';
 import PropTypes from 'fusion:prop-types';
 
 const BLOCK_CLASS_NAME = 'b-article-body';
@@ -27,6 +28,8 @@ function parseArticleItem(item, index, arcSite, phrases, id, customFields) {
             switch (item.subtype) {
                 case 'Tickaroo Liveblog':
                     return <TickarooLiveblog key={`${type}_${index}_${key}`} embed={item.embed} />;
+                case 'Tickaroo Liveblog Teaser':
+                    return <TickarooLiveblogTeaser key={`${type}_${index}_${key}`} embed={item.embed} />;
                 default:
                     return null;
             }
