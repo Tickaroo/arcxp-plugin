@@ -1,5 +1,10 @@
+import { useFusionContext } from 'fusion:context';
+import { isServerSide } from 'fusion:environment';
+import { LazyLoad, usePhrases } from '@wpmedia/arc-themes-components';
 import TickarooLiveblog from './_children/TickarooLiveblog';
 import PropTypes from 'fusion:prop-types';
+
+const BLOCK_CLASS_NAME = 'b-article-body';
 
 function parseArticleItem(item, index, arcSite, phrases, id, customFields) {
     const { _id: key = index, type, content } = item;
