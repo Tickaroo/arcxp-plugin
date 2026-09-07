@@ -21,6 +21,12 @@ const hrefSafe = (value) => {
   if (!value) {
     return undefined;
   }
+  // A root-relative path cannot carry a scheme and is resolved by the browser
+  // against the article it sits on, so a CMS storing `/sports/live` keeps working.
+  // `//host/x` is excluded: it reads as relative but navigates off-site.
+  if (String(value).startsWith('/')) {
+    return String(value).startsWith('//') ? undefined : value;
+  }
   try {
     const protocol = new URL(String(value)).protocol;
     return protocol === 'http:' || protocol === 'https:' ? value : undefined;
