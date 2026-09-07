@@ -12,6 +12,23 @@ import { TIK_USE_SEO, TIK_SITE_ORIGIN } from 'fusion:environment';
 // server-rendered anchor already carries it; when omitted the link is resolved
 // from analytics data for this site's origin, and failing that from the
 // liveblog's canonical URL.
+
+// Only http(s) belongs in a link: `javascript:` in an href executes in the page's
+// own origin on click, and escaping cannot prevent it — the value is a well-formed
+// attribute, the scheme is what makes it dangerous. Checked here as well as in the
+// prefetch endpoint, so a link never depends on one of the two being reached.
+const hrefSafe = (value) => {
+  if (!value) {
+    return undefined;
+  }
+  try {
+    const protocol = new URL(String(value)).protocol;
+    return protocol === 'http:' || protocol === 'https:' ? value : undefined;
+  } catch (e) {
+    return undefined;
+  }
+};
+
 const escapeAttr = (v) =>
   String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -42,10 +59,10 @@ const TickarooLiveblogTeaser = ({ embed }) => {
     query: {
       liveblogId: embed?.id,
       themeId: embed?.config?.themeId,
-      liveblogUrl: embed?.config?.liveblogUrl,
+      liveblogUrl: hrefSafe(embed?.config?.liveblogUrl),
       // A configured link target makes the lookup redundant; leaving the origin
       // out then also keeps it out of the cache key.
-      includeLiveblogUrl: embed?.config?.liveblogUrl ? undefined : siteOrigin
+      includeLiveblogUrl: hrefSafe(embed?.config?.liveblogUrl) ? undefined : siteOrigin
     }
   });
   useEffect(() => {
@@ -65,8 +82,9 @@ const TickarooLiveblogTeaser = ({ embed }) => {
     }
     load().catch(console.error);
   }, [embed?.id]);
-  const liveblogUrlAttr = embed?.config?.liveblogUrl
-    ? ` liveblogUrl="${escapeAttr(embed.config.liveblogUrl)}"`
+  const safeLiveblogUrl = hrefSafe(embed?.config?.liveblogUrl);
+  const liveblogUrlAttr = safeLiveblogUrl
+    ? ` liveblogUrl="${escapeAttr(safeLiveblogUrl)}"`
     : '';
   const html =
     content?.html ??

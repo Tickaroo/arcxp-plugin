@@ -25,6 +25,22 @@ const parseQueryString = function() {
   }, {})
 }
 
+// Only http(s) belongs in a link: `javascript:` in an href executes in the page's
+// own origin on click, and escaping cannot prevent it — the value is a well-formed
+// attribute, the scheme is what makes it dangerous. Checked here as well as in the
+// prefetch endpoint, so a link never depends on one of the two being reached.
+const hrefSafe = (value) => {
+  if (!value) {
+    return undefined;
+  }
+  try {
+    const protocol = new URL(String(value)).protocol;
+    return protocol === 'http:' || protocol === 'https:' ? value : undefined;
+  } catch (e) {
+    return undefined;
+  }
+};
+
 const escapeAttr = (v) =>
   String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -52,7 +68,7 @@ const TickarooLiveblogTeaserView = () => {
     query: {
       liveblogId: params?.id,
       themeId: params?.config?.themeId,
-      liveblogUrl: params?.config?.liveblogUrl
+      liveblogUrl: hrefSafe(params?.config?.liveblogUrl)
     }
   })
 
@@ -74,8 +90,9 @@ const TickarooLiveblogTeaserView = () => {
     load().catch(console.error);
   }, [params?.id]);
 
-  const liveblogUrlAttr = params?.config?.liveblogUrl
-    ? ` liveblogUrl="${escapeAttr(params.config.liveblogUrl)}"`
+  const safeLiveblogUrl = hrefSafe(params?.config?.liveblogUrl);
+  const liveblogUrlAttr = safeLiveblogUrl
+    ? ` liveblogUrl="${escapeAttr(safeLiveblogUrl)}"`
     : '';
 
   const html =
