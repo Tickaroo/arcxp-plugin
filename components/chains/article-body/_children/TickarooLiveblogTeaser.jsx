@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { useContent } from 'fusion:content'
-import { TIK_USE_SEO } from 'fusion:environment';
+import { useFusionContext } from 'fusion:context';
+import getProperties from 'fusion:properties';
+import { TIK_USE_SEO, TIK_SITE_ORIGIN } from 'fusion:environment';
 
 // Renders the Tickaroo Liveblog Teaser widget. Mirrors TickarooLiveblog.jsx but
 // renders <tickaroo-liveblog-teaser> instead of <tickaroo-liveblog>, prefetches
@@ -8,18 +10,42 @@ import { TIK_USE_SEO } from 'fusion:environment';
 // `{ html }` only — no `schema`). An optional embed.config.liveblogUrl hard-links
 // the teaser to a specific story and is passed to the prefetch too, so the
 // server-rendered anchor already carries it; when omitted the link is resolved
-// from the liveblog's canonical URL under SEO prefetch, or from analytics data
-// without it.
+// from analytics data for this site's origin, and failing that from the
+// liveblog's canonical URL.
 const escapeAttr = (v) =>
   String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
+// The analytics lookup matches on an origin, so a value carrying a path — or a
+// bare hostname with no scheme — would silently find nothing rather than fail.
+const originOf = (value) => {
+  if (!value) {
+    return undefined;
+  }
+  try {
+    return new URL(String(value).includes('://') ? String(value) : `https://${value}`).origin;
+  } catch (e) {
+    return undefined;
+  }
+};
+
 const TickarooLiveblogTeaser = ({ embed }) => {
+  // A browser render reads window.location itself; this is for the server render,
+  // which has no location and would otherwise skip the analytics lookup entirely.
+  // Site properties come first because an ArcXP bundle can serve several sites,
+  // and each needs its own origin — TIK_SITE_ORIGIN is one value for all of them.
+  const { arcSite } = useFusionContext();
+  const siteProperties = getProperties(arcSite) || {};
+  const siteOrigin = originOf(siteProperties.siteUrl || siteProperties.websiteDomain || TIK_SITE_ORIGIN);
+
   const content = useContent({
     source: TIK_USE_SEO ? 'tickaroo-liveblog-teaser' : null,
     query: {
       liveblogId: embed?.id,
       themeId: embed?.config?.themeId,
-      liveblogUrl: embed?.config?.liveblogUrl
+      liveblogUrl: embed?.config?.liveblogUrl,
+      // A configured link target makes the lookup redundant; leaving the origin
+      // out then also keeps it out of the cache key.
+      includeLiveblogUrl: embed?.config?.liveblogUrl ? undefined : siteOrigin
     }
   });
   useEffect(() => {

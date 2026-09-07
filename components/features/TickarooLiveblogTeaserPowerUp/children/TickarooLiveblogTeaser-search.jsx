@@ -155,7 +155,7 @@ const TickarooLiveblogTeaserSearch = () => {
         onChange={handleLiveblogUrlChange}
         placeholder="https://example.com/your-liveblog-article"
       />
-      <p id="form-hint">Leave blank to let the teaser resolve the link itself — from the liveblog&apos;s canonical URL with SEO prefetch enabled, from analytics data without it.</p>
+      <p id="form-hint">Leave blank to let the teaser resolve the link itself, from liveblog analytics data for this site, falling back to the liveblog&apos;s canonical URL.</p>
       <button onClick={handleButtonClick}>Submit</button>
     </div>
     </>
