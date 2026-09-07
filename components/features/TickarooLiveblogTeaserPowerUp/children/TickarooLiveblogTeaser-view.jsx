@@ -41,8 +41,13 @@ const hrefSafe = (value) => {
   // strip tabs, so `/\evil.example` and `/<tab>/evil.example` navigate off-site
   // while passing any "starts with one slash" test.
   if (String(value).startsWith('/')) {
+    // Hand back the parser's normalized path rather than the caller's string, so
+    // the href never rests on the browser normalizing a hostile value the same way.
     try {
-      return new URL(String(value), RELATIVE_BASE).origin === RELATIVE_BASE ? value : undefined;
+      const relative = new URL(String(value), RELATIVE_BASE);
+      return relative.origin === RELATIVE_BASE
+        ? `${relative.pathname}${relative.search}${relative.hash}`
+        : undefined;
     } catch (e) {
       return undefined;
     }
