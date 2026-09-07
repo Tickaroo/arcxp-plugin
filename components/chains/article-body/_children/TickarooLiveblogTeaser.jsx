@@ -1,22 +1,91 @@
 import { useEffect } from 'react';
 import { useContent } from 'fusion:content'
-import { TIK_USE_SEO } from 'fusion:environment';
+import { useFusionContext } from 'fusion:context';
+import getProperties from 'fusion:properties';
+import { TIK_USE_SEO, TIK_SITE_ORIGIN } from 'fusion:environment';
 
 // Renders the Tickaroo Liveblog Teaser widget. Mirrors TickarooLiveblog.jsx but
 // renders <tickaroo-liveblog-teaser> instead of <tickaroo-liveblog>, prefetches
 // from the teaser source, and emits no JSON-LD (the teaser prefetch returns
 // `{ html }` only — no `schema`). An optional embed.config.liveblogUrl hard-links
-// the teaser to a specific story; when omitted the link is resolved from the
-// liveblog's canonical URL under SEO prefetch, or from analytics data without it.
+// the teaser to a specific story and is passed to the prefetch too, so the
+// server-rendered anchor already carries it; when omitted the link is resolved
+// from analytics data for this site's origin, and failing that from the
+// liveblog's canonical URL.
+
+// Only http(s) belongs in a link: `javascript:` in an href executes in the page's
+// own origin on click, and escaping cannot prevent it — the value is a well-formed
+// attribute, the scheme is what makes it dangerous. Checked here as well as in the
+// prefetch endpoint, so a link never depends on one of the two being reached.
+const RELATIVE_BASE = 'https://relative.invalid';
+
+const hrefSafe = (value) => {
+  if (!value) {
+    return undefined;
+  }
+  // A root-relative path stays on the article it sits on, so a CMS storing
+  // `/sports/live` keeps working. Whether it *is* root-relative is settled by the
+  // URL parser, not by the leading characters: browsers normalize `\` to `/` and
+  // strip tabs, so `/\evil.example` and `/<tab>/evil.example` navigate off-site
+  // while passing any "starts with one slash" test.
+  if (String(value).startsWith('/')) {
+    // Hand back the parser's normalized path rather than the caller's string, so
+    // the href never rests on the browser normalizing a hostile value the same way.
+    // The emitted string is resolved too: normalizing can introduce an escape, as
+    // `/..//evil.example` collapses to the protocol-relative `//evil.example`.
+    try {
+      const relative = new URL(String(value), RELATIVE_BASE);
+      if (relative.origin !== RELATIVE_BASE) {
+        return undefined;
+      }
+      const normalized = `${relative.pathname}${relative.search}${relative.hash}`;
+      return new URL(normalized, RELATIVE_BASE).origin === RELATIVE_BASE ? normalized : undefined;
+    } catch (e) {
+      return undefined;
+    }
+  }
+  try {
+    const protocol = new URL(String(value)).protocol;
+    return protocol === 'http:' || protocol === 'https:' ? value : undefined;
+  } catch (e) {
+    return undefined;
+  }
+};
+
 const escapeAttr = (v) =>
   String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
+// The analytics lookup matches on an origin, so a value carrying a path — or a
+// bare hostname with no scheme — would silently find nothing rather than fail.
+const originOf = (value) => {
+  if (!value) {
+    return undefined;
+  }
+  try {
+    return new URL(String(value).includes('://') ? String(value) : `https://${value}`).origin;
+  } catch (e) {
+    return undefined;
+  }
+};
+
 const TickarooLiveblogTeaser = ({ embed }) => {
+  // A browser render reads window.location itself; this is for the server render,
+  // which has no location and would otherwise skip the analytics lookup entirely.
+  // Site properties come first because an ArcXP bundle can serve several sites,
+  // and each needs its own origin — TIK_SITE_ORIGIN is one value for all of them.
+  const { arcSite } = useFusionContext();
+  const siteProperties = getProperties(arcSite) || {};
+  const siteOrigin = originOf(siteProperties.siteUrl || siteProperties.websiteDomain || TIK_SITE_ORIGIN);
+
   const content = useContent({
     source: TIK_USE_SEO ? 'tickaroo-liveblog-teaser' : null,
     query: {
       liveblogId: embed?.id,
-      themeId: embed?.config?.themeId
+      themeId: embed?.config?.themeId,
+      liveblogUrl: hrefSafe(embed?.config?.liveblogUrl),
+      // A configured link target makes the lookup redundant; leaving the origin
+      // out then also keeps it out of the cache key.
+      includeLiveblogUrl: hrefSafe(embed?.config?.liveblogUrl) ? undefined : siteOrigin
     }
   });
   useEffect(() => {
@@ -36,8 +105,9 @@ const TickarooLiveblogTeaser = ({ embed }) => {
     }
     load().catch(console.error);
   }, [embed?.id]);
-  const liveblogUrlAttr = embed?.config?.liveblogUrl
-    ? ` liveblogUrl="${escapeAttr(embed.config.liveblogUrl)}"`
+  const safeLiveblogUrl = hrefSafe(embed?.config?.liveblogUrl);
+  const liveblogUrlAttr = safeLiveblogUrl
+    ? ` liveblogUrl="${escapeAttr(safeLiveblogUrl)}"`
     : '';
   const html =
     content?.html ??

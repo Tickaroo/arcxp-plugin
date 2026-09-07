@@ -25,6 +25,45 @@ const parseQueryString = function() {
   }, {})
 }
 
+// Only http(s) belongs in a link: `javascript:` in an href executes in the page's
+// own origin on click, and escaping cannot prevent it — the value is a well-formed
+// attribute, the scheme is what makes it dangerous. Checked here as well as in the
+// prefetch endpoint, so a link never depends on one of the two being reached.
+const RELATIVE_BASE = 'https://relative.invalid';
+
+const hrefSafe = (value) => {
+  if (!value) {
+    return undefined;
+  }
+  // A root-relative path stays on the article it sits on, so a CMS storing
+  // `/sports/live` keeps working. Whether it *is* root-relative is settled by the
+  // URL parser, not by the leading characters: browsers normalize `\` to `/` and
+  // strip tabs, so `/\evil.example` and `/<tab>/evil.example` navigate off-site
+  // while passing any "starts with one slash" test.
+  if (String(value).startsWith('/')) {
+    // Hand back the parser's normalized path rather than the caller's string, so
+    // the href never rests on the browser normalizing a hostile value the same way.
+    // The emitted string is resolved too: normalizing can introduce an escape, as
+    // `/..//evil.example` collapses to the protocol-relative `//evil.example`.
+    try {
+      const relative = new URL(String(value), RELATIVE_BASE);
+      if (relative.origin !== RELATIVE_BASE) {
+        return undefined;
+      }
+      const normalized = `${relative.pathname}${relative.search}${relative.hash}`;
+      return new URL(normalized, RELATIVE_BASE).origin === RELATIVE_BASE ? normalized : undefined;
+    } catch (e) {
+      return undefined;
+    }
+  }
+  try {
+    const protocol = new URL(String(value)).protocol;
+    return protocol === 'http:' || protocol === 'https:' ? value : undefined;
+  } catch (e) {
+    return undefined;
+  }
+};
+
 const escapeAttr = (v) =>
   String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -51,7 +90,8 @@ const TickarooLiveblogTeaserView = () => {
     source: TIK_USE_SEO ? 'tickaroo-liveblog-teaser' : null,
     query: {
       liveblogId: params?.id,
-      themeId: params?.config?.themeId
+      themeId: params?.config?.themeId,
+      liveblogUrl: hrefSafe(params?.config?.liveblogUrl)
     }
   })
 
@@ -73,8 +113,9 @@ const TickarooLiveblogTeaserView = () => {
     load().catch(console.error);
   }, [params?.id]);
 
-  const liveblogUrlAttr = params?.config?.liveblogUrl
-    ? ` liveblogUrl="${escapeAttr(params.config.liveblogUrl)}"`
+  const safeLiveblogUrl = hrefSafe(params?.config?.liveblogUrl);
+  const liveblogUrlAttr = safeLiveblogUrl
+    ? ` liveblogUrl="${escapeAttr(safeLiveblogUrl)}"`
     : '';
 
   const html =
