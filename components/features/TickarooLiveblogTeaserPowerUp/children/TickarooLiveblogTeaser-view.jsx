@@ -43,11 +43,15 @@ const hrefSafe = (value) => {
   if (String(value).startsWith('/')) {
     // Hand back the parser's normalized path rather than the caller's string, so
     // the href never rests on the browser normalizing a hostile value the same way.
+    // The emitted string is resolved too: normalizing can introduce an escape, as
+    // `/..//evil.example` collapses to the protocol-relative `//evil.example`.
     try {
       const relative = new URL(String(value), RELATIVE_BASE);
-      return relative.origin === RELATIVE_BASE
-        ? `${relative.pathname}${relative.search}${relative.hash}`
-        : undefined;
+      if (relative.origin !== RELATIVE_BASE) {
+        return undefined;
+      }
+      const normalized = `${relative.pathname}${relative.search}${relative.hash}`;
+      return new URL(normalized, RELATIVE_BASE).origin === RELATIVE_BASE ? normalized : undefined;
     } catch (e) {
       return undefined;
     }
