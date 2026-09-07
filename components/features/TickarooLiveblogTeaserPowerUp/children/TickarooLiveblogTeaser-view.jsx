@@ -51,7 +51,8 @@ const TickarooLiveblogTeaserView = () => {
     source: TIK_USE_SEO ? 'tickaroo-liveblog-teaser' : null,
     query: {
       liveblogId: params?.id,
-      themeId: params?.config?.themeId
+      themeId: params?.config?.themeId,
+      liveblogUrl: params?.config?.liveblogUrl
     }
   })
 

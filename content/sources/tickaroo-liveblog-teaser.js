@@ -9,8 +9,12 @@ import axios from 'axios';
 const fetch = async (query) => {
     const liveblogId = query.liveblogId;
     const themeId = query.themeId;
+    // Without this the prefetched snapshot would link to the liveblog's canonical URL
+    // (or nowhere), silently discarding the editor's chosen target: the server renders
+    // the anchor, and the client skips its own lookup once SSR data is present.
+    const liveblogUrl = query.liveblogUrl;
     const response = await axios
-        .get('https://cdn.tickaroo.com/api/embed/v4/prefetch/liveblog-teaser.json', { params: { liveblogId, client_id: TIK_CLIENT_ID, themeId } })
+        .get('https://cdn.tickaroo.com/api/embed/v4/prefetch/liveblog-teaser.json', { params: { liveblogId, client_id: TIK_CLIENT_ID, themeId, ...(liveblogUrl ? { liveblogUrl } : {}) } })
         .then(response => response.data)
         .catch(error => {
             console.error(error);
@@ -27,6 +31,6 @@ const fetch = async (query) => {
 
 export default {
     fetch,
-    params: { liveblogId: 'text', themeId: 'text' },
+    params: { liveblogId: 'text', themeId: 'text', liveblogUrl: 'text' },
     ttl: 120
 }

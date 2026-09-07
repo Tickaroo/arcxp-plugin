@@ -6,8 +6,10 @@ import { TIK_USE_SEO } from 'fusion:environment';
 // renders <tickaroo-liveblog-teaser> instead of <tickaroo-liveblog>, prefetches
 // from the teaser source, and emits no JSON-LD (the teaser prefetch returns
 // `{ html }` only — no `schema`). An optional embed.config.liveblogUrl hard-links
-// the teaser to a specific story; when omitted the link is resolved from the
-// liveblog's canonical URL under SEO prefetch, or from analytics data without it.
+// the teaser to a specific story and is passed to the prefetch too, so the
+// server-rendered anchor already carries it; when omitted the link is resolved
+// from the liveblog's canonical URL under SEO prefetch, or from analytics data
+// without it.
 const escapeAttr = (v) =>
   String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -16,7 +18,8 @@ const TickarooLiveblogTeaser = ({ embed }) => {
     source: TIK_USE_SEO ? 'tickaroo-liveblog-teaser' : null,
     query: {
       liveblogId: embed?.id,
-      themeId: embed?.config?.themeId
+      themeId: embed?.config?.themeId,
+      liveblogUrl: embed?.config?.liveblogUrl
     }
   });
   useEffect(() => {
