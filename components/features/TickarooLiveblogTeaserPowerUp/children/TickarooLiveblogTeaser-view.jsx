@@ -25,6 +25,9 @@ const parseQueryString = function() {
   }, {})
 }
 
+const escapeAttr = (v) =>
+  String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
 const TickarooLiveblogTeaserView = () => {
 
   useEffect(() => {
@@ -71,7 +74,7 @@ const TickarooLiveblogTeaserView = () => {
   }, [params?.id]);
 
   const liveblogUrlAttr = params?.config?.liveblogUrl
-    ? ` liveblogUrl="${params.config.liveblogUrl}"`
+    ? ` liveblogUrl="${escapeAttr(params.config.liveblogUrl)}"`
     : '';
 
   const html =
