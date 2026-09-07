@@ -29,15 +29,23 @@ const parseQueryString = function() {
 // own origin on click, and escaping cannot prevent it — the value is a well-formed
 // attribute, the scheme is what makes it dangerous. Checked here as well as in the
 // prefetch endpoint, so a link never depends on one of the two being reached.
+const RELATIVE_BASE = 'https://relative.invalid';
+
 const hrefSafe = (value) => {
   if (!value) {
     return undefined;
   }
-  // A root-relative path cannot carry a scheme and is resolved by the browser
-  // against the article it sits on, so a CMS storing `/sports/live` keeps working.
-  // `//host/x` is excluded: it reads as relative but navigates off-site.
+  // A root-relative path stays on the article it sits on, so a CMS storing
+  // `/sports/live` keeps working. Whether it *is* root-relative is settled by the
+  // URL parser, not by the leading characters: browsers normalize `\` to `/` and
+  // strip tabs, so `/\evil.example` and `/<tab>/evil.example` navigate off-site
+  // while passing any "starts with one slash" test.
   if (String(value).startsWith('/')) {
-    return String(value).startsWith('//') ? undefined : value;
+    try {
+      return new URL(String(value), RELATIVE_BASE).origin === RELATIVE_BASE ? value : undefined;
+    } catch (e) {
+      return undefined;
+    }
   }
   try {
     const protocol = new URL(String(value)).protocol;
